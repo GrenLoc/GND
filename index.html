@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GrenLoc – Digital Location Code System</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-inner">
+    <div class="logo-block">
+      <span class="logo-flag">🇬🇩</span>
+      <div>
+        <h1 class="logo-title">GrenLoc</h1>
+        <p class="logo-sub">Digital Location Code System</p>
+      </div>
+    </div>
+    <div class="header-badge">Google Maps Edition</div>
+  </div>
+</header>
+
+<main class="app-main">
+  <section class="map-panel">
+    <div class="map-instruction">Click anywhere on the map</div>
+    <div id="map"></div>
+  </section>
+
+  <aside class="info-panel">
+
+    <div class="card code-card">
+      <div class="card-label">Location Code</div>
+      <div class="location-code" id="location-code">GN-???-??????</div>
+      <div class="coord-display" id="coord-display">Click map to begin</div>
+      <div class="parish-display" id="parish-display"></div>
+    </div>
+
+    <div class="card qr-card">
+      <div class="card-label">Navigation QR Code</div>
+      <canvas id="qr-canvas"></canvas>
+    </div>
+
+  </aside>
+</main>
+
+<footer class="app-footer">
+GrenLoc Phase 1 – Google Maps Integration
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="script.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBJfcDVXsepgm5a9qGt2bfaRFtOKOfo-sw&callback=initMap"></script>
+
+</body>
+</html>
