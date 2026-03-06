@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Successful – DAC Digital Address Codes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --navy:#0c1220; --navy-2:#141e30; --navy-3:#1e2d44; --saffron:#f0a500; --seafoam:#3abf9e; --coral:#e85d3a; --text:#e8eef6; --dim:#7a92b4; }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html{font-size:16px;-webkit-font-smoothing:antialiased;}
+    body{background:var(--navy);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+    .card{background:var(--navy-2);border:2px solid var(--seafoam);border-radius:14px;max-width:520px;width:100%;padding:2.5rem 2rem;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.5);}
+    .success-icon{font-size:3.5rem;margin-bottom:1rem;}
+    h1{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--seafoam);margin-bottom:0.4rem;}
+    .sub{font-size:0.9rem;color:var(--dim);margin-bottom:1.8rem;}
+    .code-block{background:var(--navy-3);border:1px solid rgba(240,165,0,0.3);border-radius:8px;padding:1rem 1.5rem;margin-bottom:1.5rem;}
+    .code-label{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--dim);margin-bottom:0.4rem;}
+    .dac-code{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:600;color:var(--saffron);letter-spacing:0.08em;word-break:break-all;}
+    .unlocked-badge{display:inline-block;background:var(--seafoam);color:var(--navy);font-family:'IBM Plex Mono',monospace;font-size:0.7rem;font-weight:700;letter-spacing:0.1em;padding:3px 10px;border-radius:100px;margin-top:0.5rem;}
+    .error-msg{background:rgba(232,93,58,0.12);border:1px solid rgba(232,93,58,0.4);color:var(--coral);border-radius:8px;padding:0.75rem 1rem;font-size:0.82rem;margin-bottom:1.2rem;display:none;}
+    #countdown-msg{font-family:'IBM Plex Mono',monospace;font-size:0.75rem;color:var(--dim);margin-top:1.5rem;text-align:center;}
+    .footer-note{margin-top:2rem;font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--dim);opacity:0.6;letter-spacing:0.06em;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="success-icon">✅</div>
+  <h1>Payment Successful!</h1>
+  <p class="sub" id="sub-msg">Your layout is being unlocked. Redirecting you back…</p>
+  <div class="error-msg" id="error-msg">No DAC code found. Please return to the map, pin your property again, then complete payment.</div>
+  <div class="code-block" id="code-block" style="display:none;">
+    <div class="code-label">Unlocked DAC Address Code</div>
+    <div class="dac-code" id="code-display">—</div>
+    <div class="unlocked-badge">🔓 PAID · WATERMARK-FREE</div>
+  </div>
+  <p id="countdown-msg"></p>
+</div>
+<p class="footer-note">DAC – Digital Address Codes · dac.grenada@gmail.com</p>
+<script>
+(function() {
+  // 1. Resolve DAC code
+  var params = new URLSearchParams(window.location.search);
+  var pendingCode = (params.get('code') || '').trim().toUpperCase();
+  if (!pendingCode) {
+    try { pendingCode = (localStorage.getItem('dac_pending_payment_code') || '').trim().toUpperCase(); } catch(e) {}
+  }
+  if (!pendingCode) {
+    document.getElementById('error-msg').style.display = 'block';
+    document.getElementById('sub-msg').textContent = 'Something went wrong — no DAC code was found.';
+    return;
+  }
+
+  // 2. Show code
+  document.getElementById('code-display').textContent = pendingCode;
+  document.getElementById('code-block').style.display = 'block';
+
+  // 3. Which page triggered payment?
+  var returnPage = 'layout.html';
+  try {
+    var trigger = localStorage.getItem('dac_payment_trigger') || 'layout';
+    returnPage = (trigger === 'sticker') ? 'sticker.html' : 'layout.html';
+  } catch(e) {}
+
+  // 4. Write ONLY the relevant paid key — one payment = one product
+  if (returnPage === 'sticker.html') {
+    try { localStorage.setItem('dac_sticker_paid_' + pendingCode, '1'); } catch(e) {}
+  } else {
+    try { localStorage.setItem('dac_paid_' + pendingCode, '1'); } catch(e) {}
+  }
+
+  // 5. Broadcast ONLY to the relevant tab
+  setTimeout(function() {
+    if (returnPage === 'sticker.html') {
+      try { var bc = new BroadcastChannel('dac_sticker_payment'); bc.postMessage({ code: pendingCode, paid: true }); setTimeout(function(){ try{bc.close();}catch(e){} }, 3000); } catch(e) {}
+    } else {
+      try { var bc = new BroadcastChannel('dac_payment'); bc.postMessage({ code: pendingCode, paid: true }); setTimeout(function(){ try{bc.close();}catch(e){} }, 3000); } catch(e) {}
+    }
+  }, 500);
+
+  // 6. Clean up
+  try { localStorage.removeItem('dac_pending_payment_code'); } catch(e) {}
+  try { localStorage.removeItem('dac_payment_trigger'); } catch(e) {}
+
+  // 7. Countdown then redirect back
+  var secs = 4;
+  var countEl = document.getElementById('countdown-msg');
+  countEl.textContent = 'Returning in ' + secs + 's…';
+  var timer = setInterval(function() {
+    secs--;
+    if (secs > 0) {
+      countEl.textContent = 'Returning in ' + secs + 's…';
+    } else {
+      clearInterval(timer);
+      window.location.href = returnPage;
+    }
+  }, 1000);
+})();
+</script>
+</body>
+</html>
