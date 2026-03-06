@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DAC Sticker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=IBM+Plex+Mono:wght@400;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0c1220;
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 16px;
+      gap: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes wm-pulse { 0%,100%{opacity:0.55} 50%{opacity:0.7} }
+
+    .sticker-wrap {
+      position: relative;
+      background: #ffffff;
+      border: 3px solid #f0a500;
+      border-radius: 14px;
+      padding: 28px 24px 20px;
+      text-align: center;
+      width: 100%; max-width: 320px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+    .sticker-flag  { font-size: 2.8rem; line-height: 1; margin-bottom: 4px; }
+    .sticker-logo  { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #0c1220; letter-spacing: 0.06em; line-height: 1; }
+    .sticker-sub   { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.14em; color: #7a92b4; margin-top: 3px; }
+    .sticker-code  { font-family: 'IBM Plex Mono', monospace; font-size: 1.35rem; font-weight: 700; color: #c87700; letter-spacing: 0.08em; margin: 14px 0 10px; word-break: break-all; }
+    .sticker-qr    { width: 160px; height: 160px; margin: 0 auto 12px; display: block; border: 2px solid #f0a500; border-radius: 8px; padding: 6px; background: #fff; }
+    .sticker-coords { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #555; margin-top: 4px; }
+    .sticker-scan  { font-family: 'IBM Plex Mono', monospace; font-size: 0.65rem; color: #888; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .sticker-web   { font-family: 'IBM Plex Mono', monospace; font-size: 0.62rem; color: #c87700; margin-top: 6px; letter-spacing: 0.06em; }
+    .sticker-email { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: #7a92b4; margin-top: 2px; letter-spacing: 0.05em; }
+    .sticker-date  { font-family: 'IBM Plex Mono', monospace; font-size: 0.6rem; color: #aaa; margin-top: 8px; border-top: 1px dashed #eee; padding-top: 8px; }
+
+    /* Watermark */
+    .sticker-watermark {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      pointer-events: none; border-radius: 12px; overflow: hidden;
+      animation: wm-pulse 2s ease-in-out infinite;
+      z-index: 10;
+    }
+    .wm-text { font-family: 'Syne', sans-serif; font-size: 2.8rem; font-weight: 800; color: #ff0000; transform: rotate(-25deg); white-space: nowrap; letter-spacing: 0.06em; text-shadow: 2px 2px 0 #000,-2px -2px 0 #000; -webkit-text-stroke: 1.5px #000; line-height: 1; }
+    .wm-sub  { font-family: 'IBM Plex Mono', monospace; font-size: 1rem; font-weight: 700; color: #f0a500; transform: rotate(-25deg); white-space: nowrap; letter-spacing: 0.14em; text-shadow: 1px 1px 0 #000,-1px -1px 0 #000; margin-top: 4px; }
+
+    /* Pay bar */
+    .pay-bar { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; }
+    .btn-pay {
+      width: 100%; padding: 13px 20px;
+      background: linear-gradient(135deg,#2a1a3a,#1e2d44);
+      color: #c09af0; border: 2px solid #9b72e8; border-radius: 10px;
+      font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.03em;
+      box-shadow: 0 0 20px rgba(155,114,232,0.25);
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-badge { font-family: 'IBM Plex Mono', monospace; font-size: 10px; background: #9b72e8; color: #fff; padding: 2px 8px; border-radius: 4px; letter-spacing: 0.08em; }
+
+    .waiting-bar {
+      display: none; width: 100%;
+      background: rgba(240,165,0,0.08); border: 1px solid rgba(240,165,0,0.3);
+      border-radius: 8px; padding: 14px 16px;
+      flex-direction: column; gap: 10px;
+      font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #f0a500; letter-spacing: 0.06em;
+    }
+    .waiting-row { display: flex; align-items: center; gap: 10px; }
+    .waiting-hint { color: #7a92b4; font-size: 10px; line-height: 1.6; }
+
+    .unlocked-bar {
+      display: none; width: 100%; max-width: 320px;
+      background: rgba(58,191,158,0.12); border: 2px solid #3abf9e;
+      border-radius: 10px; padding: 16px; text-align: center;
+    }
+    .unlocked-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #3abf9e; margin-bottom: 8px; }
+    .btn-print-now {
+      padding: 10px 28px;
+      background: #3abf9e; color: #0c1220;
+      font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+      border: none; border-radius: 8px; cursor: pointer;
+    }
+
+    /* Error */
+    .error-screen {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 60vh; gap: 1rem;
+      font-family: 'IBM Plex Mono', monospace;
+      color: #e85d3a; text-align: center;
+    }
+    .error-screen h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; }
+    .error-screen p  { font-size: 0.82rem; color: #7a92b4; max-width: 340px; }
+  </style>
+
+  <!-- Print blocker — removed after payment -->
+  <style id="print-block">
+    @media print {
+      body * { visibility: hidden !important; }
+      .sticker-watermark, .sticker-watermark * { visibility: visible !important; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="error-screen" class="error-screen" style="display:none;">
+  <h2>⚠ No sticker data found</h2>
+  <p>Please return to the map, pin a location, and click "Print Sticker" again.</p>
+  <a href="index.html" style="color:#f0a500;font-family:'IBM Plex Mono',monospace;font-size:0.8rem;">← Back to map</a>
+</div>
+
+<div id="sticker-root" style="display:none;">
+
+  <!-- Sticker card -->
+  <div class="sticker-wrap">
+    <div class="sticker-watermark" id="sticker-wm">
+      <div class="wm-text">PREVIEW</div>
+      <div class="wm-sub">PAY TO PRINT</div>
+    </div>
+    <div class="sticker-flag">🇬🇩</div>
+    <div class="sticker-logo">DAC</div>
+    <div class="sticker-sub">Digital Address Codes</div>
+    <div class="sticker-code" id="stk-code">—</div>
+    <div id="stk-qr-holder" style="width:160px;height:160px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border:2px solid #f0a500;border-radius:8px;font-size:10px;color:#aaa;">Loading…</div>
+    <div class="sticker-coords" id="stk-coords"></div>
+    <div class="sticker-scan">📱 Scan for directions</div>
+    <div class="sticker-web">🌐 dacgrenada.github.io/Dac</div>
+    <div class="sticker-email">✉ dac.grenada@gmail.com</div>
+    <div class="sticker-date" id="stk-date"></div>
+  </div>
+
+  <!-- Pay bar -->
+  <div class="pay-bar" id="pay-bar">
+    <button class="btn-pay" id="btn-sticker-pay" onclick="startPayment()">
+      💳 Pay to Print Sticker — $3
+      <span class="btn-badge">NO WATERMARK</span>
+    </button>
+
+    <div class="waiting-bar" id="sticker-waiting">
+      <div class="waiting-row">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f0a500" stroke-width="2" style="animation:spin 1s linear infinite;flex-shrink:0"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+        <span>⏳ Waiting for payment confirmation…</span>
+      </div>
+      <div class="waiting-hint">Complete your payment in the Stripe tab. This will unlock automatically.</div>
+    </div>
+  </div>
+
+  <div class="unlocked-bar" id="sticker-unlocked">
+    <div class="unlocked-title">✅ Sticker Unlocked!</div>
+    <button class="btn-print-now" onclick="consumePrint()">🖨 Print Sticker</button>
+  </div>
+
+</div><!-- #sticker-root -->
+
+<script>
+(function() {
+  'use strict';
+
+  // ── 1. Load data ──────────────────────────────────────────────────────────
+  var raw = null;
+  try { raw = localStorage.getItem('dac_sticker_data'); } catch(e) {}
+
+  if (!raw) {
+    document.getElementById('error-screen').style.display = 'flex';
+    return;
+  }
+
+  var d;
+  try { d = JSON.parse(raw); } catch(e) {
+    document.getElementById('error-screen').style.display = 'flex';
+    return;
+  }
+
+  document.getElementById('sticker-root').style.display = 'contents';
+  document.title = 'DAC Sticker – ' + d.code;
+
+  // ── 2. Populate ───────────────────────────────────────────────────────────
+  document.getElementById('stk-code').textContent   = d.code;
+  document.getElementById('stk-coords').textContent = d.lat + ', ' + d.lng;
+  document.getElementById('stk-date').textContent   = 'Generated ' + d.dateStr;
+
+  var qrHolder = document.getElementById('stk-qr-holder');
+  if (d.qrUrl) {
+    var qrImg = document.createElement('img');
+    qrImg.src = d.qrUrl;
+    qrImg.className = 'sticker-qr';
+    qrImg.alt = 'QR Code';
+    qrHolder.replaceWith(qrImg);
+  } else {
+    qrHolder.textContent = 'QR unavailable';
+  }
+
+  // ── 3. Payment flow ───────────────────────────────────────────────────────
+  var STRIPE_LINK    = d.stripeLink || 'https://buy.stripe.com/fZu3cp19C4PN10z0Ot5wI00';
+  var EXPECTED_CODE  = d.code;
+  var paymentStarted = false;
+  var unlocked       = false;
+
+  // Check if already paid (e.g. page reload after payment)
+  try {
+    if (localStorage.getItem('dac_sticker_paid_' + EXPECTED_CODE) === '1') {
+      // Consume the key immediately — one load = one use
+      try { localStorage.removeItem('dac_sticker_paid_' + EXPECTED_CODE); } catch(e) {}
+      unlockSticker();
+      return;
+    }
+  } catch(e) {}
+
+  // Open BroadcastChannel immediately so it's ready when success.html posts
+  var bc = null;
+  try {
+    bc = new BroadcastChannel('dac_sticker_payment');
+    bc.onmessage = function(evt) {
+      if (unlocked) return;
+      var msg = evt.data || {};
+      if (msg.paid) {
+        unlocked = true;
+        try { bc.close(); } catch(e) {}
+        try { localStorage.removeItem('dac_sticker_paid_' + EXPECTED_CODE); } catch(e) {}
+        unlockSticker();
+      }
+    };
+  } catch(e) {}
+
+  // localStorage storage-event fallback
+  window.addEventListener('storage', function(e) {
+    if (unlocked) return;
+    if (e.key === 'dac_sticker_paid_' + EXPECTED_CODE && e.newValue === '1') {
+      unlocked = true;
+      unlockSticker();
+    }
+  });
+
+  window.startPayment = function() {
+    if (paymentStarted) return;
+    paymentStarted = true;
+    try { localStorage.setItem('dac_pending_payment_code', EXPECTED_CODE); } catch(e) {}
+    try { localStorage.setItem('dac_payment_trigger', 'sticker'); } catch(e) {}
+    window.open(STRIPE_LINK, '_blank');
+    document.getElementById('btn-sticker-pay').style.display = 'none';
+    document.getElementById('sticker-waiting').style.display = 'flex';
+  };
+
+  window.consumePrint = function() { window.print(); };
+
+  function unlockSticker() {
+    var wm = document.getElementById('sticker-wm');
+    if (wm) wm.remove();
+    var pb = document.getElementById('print-block');
+    if (pb) pb.remove();
+    var s = document.createElement('style');
+    s.textContent = '@media print { #pay-bar { display:none!important; } #sticker-unlocked { display:none!important; } body { background:#fff!important; } }';
+    document.head.appendChild(s);
+    document.getElementById('sticker-waiting').style.display = 'none';
+    document.getElementById('sticker-unlocked').style.display = 'block';
+  }
+
+})();
+</script>
+</body>
+</html>
